@@ -4,6 +4,10 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.sun.org.apache.xerces.internal.jaxp.DocumentBuilderFactoryImpl;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
+import org.json.simple.parser.ParseException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -13,9 +17,7 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,11 +34,16 @@ public class Main {
         String jsonXML = listToJson(employeeList);
         writeString(jsonXML, "data2.json");
 
-
+        String json = readString("data.json");
+//        System.out.println(json);
+        employeeList = jsonToList(json);
+        for (Employee emp: employeeList){
+            System.out.println(emp);
+        }
     }
 
     public static String listToJson(List<Employee> list) {
-        GsonBuilder builder = new GsonBuilder();
+        GsonBuilder builder = new GsonBuilder()/*.setPrettyPrinting()*/;
         Gson gson = builder.create();
         Type listType = new TypeToken<List<Employee>>() {
         }.getType();
@@ -80,6 +87,33 @@ public class Main {
         } catch (SAXException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static String readString(String fileName) {
+        try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
+            return br.readLine();
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static List<Employee> jsonToList(String json) {
+        JSONParser parser = new JSONParser();
+        List<Employee> list = new ArrayList<>();
+        try {
+            GsonBuilder gsonBuilder = new GsonBuilder();
+            Gson gson = gsonBuilder.create();
+            JSONArray employees = (JSONArray) parser.parse(json);
+            for (Object employee : employees) {
+                list.add(gson.fromJson(employee.toString(), Employee.class));
+            }
+            return list;
+        } catch (ParseException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
 }
